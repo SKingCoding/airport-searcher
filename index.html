@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ICAO Code Lookup with Dark/Light Mode</title>
+    <style>
+        body.light-mode {
+            background-color: white;
+            color: black;
+        }
+
+        body.dark-mode {
+            background-color: black;
+            color: white;
+        }
+
+        #result {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+
+        input, button {
+            padding: 10px;
+            font-size: 16px;
+        }
+
+        .switch {
+            margin-top: 20px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body class="light-mode">
+    <h1>Airport ICAO Code Lookup</h1>
+    
+    <label class="switch">
+        <input type="checkbox" id="modeSwitch">
+        Dark Mode
+    </label>
+    
+    <form id="icaoForm">
+        <label for="icao">Enter ICAO Code:</label>
+        <input type="text" id="icao" name="icao" maxlength="4" required>
+        <button type="submit">Search</button>
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+        // ICAO code to Airport database
+        const airports = {
+            // Major European Airports
+            "EGLL": "Heathrow Airport (London, UK)",
+            "EHAM": "Amsterdam Schiphol Airport (Netherlands)",
+            "EDDF": "Frankfurt Airport (Germany)",
+            "LFPG": "Charles de Gaulle Airport (Paris, France)",
+            "LEMD": "Adolfo Suárez Madrid–Barajas Airport (Spain)",
+            "LIRF": "Leonardo da Vinci–Fiumicino Airport (Rome, Italy)",
+            "LOWW": "Vienna International Airport (Austria)",
+            "ESSA": "Stockholm Arlanda Airport (Sweden)",
+            "EKCH": "Copenhagen Airport (Denmark)",
+            "LSZH": "Zurich Airport (Switzerland)",
+            "LIMC": "Milan Malpensa Airport (Italy)",
+            "LEBL": "Barcelona–El Prat Airport (Spain)",
+            "LFSB": "EuroAirport Basel-Mulhouse-Freiburg (France/Switzerland)",
+            "LGAV": "Athens International Airport (Greece)",
+
+            // Major Middle Eastern Airports
+            "OMDB": "Dubai International Airport (UAE)",
+            "OTHH": "Hamad International Airport (Doha, Qatar)",
+            "OERK": "King Khalid International Airport (Riyadh, Saudi Arabia)",
+            "OEJN": "King Abdulaziz International Airport (Jeddah, Saudi Arabia)",
+            "OMAA": "Abu Dhabi International Airport (UAE)",
+            "OBBI": "Bahrain International Airport (Bahrain)",
+            "LLBG": "Ben Gurion International Airport (Tel Aviv, Israel)",
+            "OJAI": "Queen Alia International Airport (Amman, Jordan)",
+            "OLBA": "Beirut–Rafic Hariri International Airport (Lebanon)",
+            "OKBK": "Kuwait International Airport (Kuwait)",
+
+            // Major African Airports
+            "FAOR": "O. R. Tambo International Airport (Johannesburg, South Africa)",
+            "FACT": "Cape Town International Airport (Cape Town, South Africa)",
+            "DNMM": "Murtala Muhammed International Airport (Lagos, Nigeria)",
+            "HKJK": "Jomo Kenyatta International Airport (Nairobi, Kenya)",
+            "HAAB": "Addis Ababa Bole International Airport (Ethiopia)",
+            "DAAG": "Houari Boumediene Airport (Algiers, Algeria)",
+            "GMMN": "Mohammed V International Airport (Casablanca, Morocco)",
+            "HSSS": "Khartoum International Airport (Sudan)",
+            "DTTA": "Tunis-Carthage International Airport (Tunis, Tunisia)",
+            "DIAP": "Port Bouet Airport (Abidjan, Ivory Coast)",
+            "DNAA": "Nnamdi Azikiwe International Airport (Abuja, Nigeria)",
+            "FVHA": "Robert Gabriel Mugabe International Airport (Harare, Zimbabwe)",
+            "FNLU": "Quatro de Fevereiro International Airport (Luanda, Angola)",
+            "FZAA": "N'Djili International Airport (Kinshasa, Democratic Republic of the Congo)",
+            "GABS": "Modibo Keita International Airport (Bamako, Mali)",
+            "HRYR": "Kigali International Airport (Rwanda)",
+            "FQMA": "Maputo International Airport (Mozambique)",
+            "HKMO": "Moi International Airport (Mombasa, Kenya)",
+            "FOOL": "Libreville International Airport (Gabon)",
+            "GLRB": "Roberts International Airport (Monrovia, Liberia)",
+            "DGAA": "Kotoka International Airport (Accra, Ghana)",
+            "HUEN": "Entebbe International Airport (Uganda)",
+            "HECA": "Cairo International Airport (Cairo, Egypt)",
+
+            // Major American Airports (USA, Canada, etc.)
+            "KJFK": "John F. Kennedy International Airport (New York, USA)",
+            "KLAX": "Los Angeles International Airport (USA)",
+            "KORD": "O'Hare International Airport (Chicago, USA)",
+            "KSFO": "San Francisco International Airport (USA)",
+            "KATL": "Hartsfield-Jackson Atlanta International Airport (USA)",
+            "KMIA": "Miami International Airport (USA)",
+            "CYVR": "Vancouver International Airport (Canada)",
+            "CYYZ": "Toronto Pearson International Airport (Canada)",
+            "KDFW": "Dallas/Fort Worth International Airport (USA)",
+            "KIAH": "George Bush Intercontinental Airport (Houston, USA)",
+            "KBOS": "Logan International Airport (Boston, USA)",
+            "KIAD": "Washington Dulles International Airport (USA)",
+            "KSEA": "Seattle-Tacoma International Airport (USA)",
+            "KDEN": "Denver International Airport (USA)",
+            "KMCO": "Orlando International Airport (USA)",
+            "PHNL": "Daniel K. Inouye International Airport (Honolulu, USA)",
+            "TNCM": "Princess Juliana International Airport (Sint Maarten)"
+        };
+
+        // Dark/Light mode toggle
+        const modeSwitch = document.getElementById('modeSwitch');
+        const bodyElement = document.body;
+
+        modeSwitch.addEventListener('change', function() {
+            if (modeSwitch.checked) {
+                bodyElement.className = 'dark-mode'; // Switch to dark mode
+            } else {
+                bodyElement.className = 'light-mode'; // Switch to light mode
+            }
+        });
+
+        // Form submit event
+        document.getElementById('icaoForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const icaoCode = document.getElementById('icao').value.toUpperCase();
+            const resultDiv = document.getElementById('result');
+
+            // Check if the ICAO code exists in the local database
+            if (airports[icaoCode]) {
+                resultDiv.innerHTML = `<strong>Airport Name:</strong> ${airports[icaoCode]}`;
+            } else {
+                resultDiv.innerHTML = 'Airport not found. Please check the ICAO code.';
+            }
+        });
+    </script>
+</body>
+</html>
